@@ -107,12 +107,41 @@ The `linkList` array in `meta.ts` tells the Vega app what media is available.
   ]
   ```
 
-## 4. Dependencies and Error Handling
-- Use `axios` and `cheerio` provided in `providerContext`. Do NOT use `fetch` or import cheerio globally, because the context objects are injected with special caching/interceptor logic by the Vega app.
+## 4. How a Provider Works (The Sandbox environment)
+Providers in the Vega App execute inside a strict, isolated JavaScript sandbox (a Web Worker or JavaScriptCore) for security and performance reasons.
+Because of this strict sandbox environment, you MUST adhere to the following rules:
+- **NO THIRD-PARTY LIBRARIES**: You CANNOT install or import any third-party NPM libraries (e.g., `npm install <package>`). The sandbox does not have a module resolution system for external Node modules.
+- **NO NATIVE APIs**: You CANNOT use Node.js built-ins like `fs`, `path`, or `child_process`.
+- **INJECTED CONTEXT ONLY**: The only tools you can use are the ones explicitly injected into the `providerContext` by the Vega App sandbox. This includes a custom `axios` instance, `cheerio`.
+- **CRITICAL WARNING**: If you use, `require()`, `import`, or install unauthorized NPM packages, the provider will fail to bundle or will crash immediately when loaded into the Vega App.
+
+## 5. How the Data Flows (Execution Order)
+To understand how to build a provider, you must understand how the Vega App calls these files in sequence:
+1. **`catalog.ts`**: The app reads this file first to get the list of categories (e.g., "Trending Movies").
+2. **`posts.ts`**: When a user clicks a category, the app passes the category's `filter` to `getPosts({ filter })`. This function scrapes the list of movies/shows on that page and returns them. Each returned post contains a `link` to its specific page.
+3. **`meta.ts`**: When a user taps on a specific movie/show, the app passes that post's `link` to `getMeta({ link })`. This function scrapes the detailed info (synopsis, cast) and generates a `linkList` containing the available media links (e.g., streaming links for the movie, or links for episodes).
+4. **`episodes.ts` (Optional)**: If it's a dynamic TV show, the app passes the `episodesLink` to `getEpisodes({ url })` to load the episodes for a season.
+5. **`stream.ts`**: When the user clicks "Play" on a movie or an episode, the app passes the final media link to `getStream({ link })`. This function scrapes the final raw video files (like `.m3u8` or `.mp4`) for the video player.
+
+## 6. Dependencies and Error Handling
+- Use `axios` and `cheerio` provided in `providerContext`. Do NOT use `fetch` or import `axios`/`cheerio` globally, because the context objects are injected with special caching/interceptor logic by the Vega app.
 - Use `commonHeaders` from `providerContext` when making axios requests to avoid blocking.
 - When an extractor fails, you can use `throwProviderError(providerName, functionName, err)` to throw standard errors.
 
-## 5. Bundling
+## 7. Testing
+To verify if your scraping logic works, you can test specific functions using the provided CLI test script:
+`npm run test:provider -- <providerName> <functionName> [--rebuild]`
+or
+`npm run test -- <providerName> (this will test the provider end to end)
+
+Examples:
+- `npm run test:provider -- myProvider getPosts --rebuild`
+- `npm run test:provider -- myProvider getMeta`
+- `npm run test:provider -- myProvider getStream`
+
+The script will prompt you for the necessary parameters (like filter, link, etc.) and validate the output against the expected JSON schema. Always use the `--rebuild` flag if you have just made changes to the TypeScript files.
+
+## 8. Bundling
 After modifying or creating a provider, it MUST be built using:
 `npm run build`
 This generates the CommonJS outputs into the `dist/` folder, which the Vega app consumes.
