@@ -5,6 +5,7 @@
     "version": "1.0",
     "icon": "",
     "type": "global",
+    "hasSettings": true,
     "disabled": false
   }
 ]
