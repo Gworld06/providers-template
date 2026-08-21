@@ -5,14 +5,18 @@ export const getStream = async function ({
   type,
   signal,
   providerContext,
+  isDownload,
 }: {
   link: string;
   type: string;
-  signal: AbortSignal;
+  signal?: AbortSignal;
   providerContext: ProviderContext;
+  isDownload?: boolean;
 }): Promise<Stream[]> {
   // Use the link to fetch streaming sources
-  // Here we just return mock streaming data
+  // If isDownload is true, you can place download-friendly/fast direct servers at the top.
+  // Always return all available servers; the app uses the 1st server for quick download
+  // or lets the user choose from all returned servers in the download dialog.
   return [
     {
       server: "ExampleServer",

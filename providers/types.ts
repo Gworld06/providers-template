@@ -87,11 +87,13 @@ export interface ProviderType {
     type,
     signal,
     providerContext,
+    isDownload,
   }: {
     link: string;
     type: string;
-    signal: AbortSignal;
+    signal?: AbortSignal;
     providerContext: ProviderContext;
+    isDownload?: boolean;
   }) => Promise<Stream[]>;
   GetHomePosts: ({
     filter,
