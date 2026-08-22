@@ -98,9 +98,16 @@ export const getPosts = async function ({
   }
 
   const response = await providerContext.axios.get(url.href, {
-    headers: providerContext.commonHeaders,
-    signal,
-  });
+  headers: {
+    ...providerContext.commonHeaders,
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "Referer": "https://animejoker.com/",
+    "Accept":
+      "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+  },
+  signal,
+});
 
   return parsePosts(response.data, providerContext, BASE_URL);
 };
