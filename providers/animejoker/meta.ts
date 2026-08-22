@@ -98,16 +98,14 @@ export const getMeta = async function ({
     if (exists) return;
 
     linkList.push({
-      title: "Episodes",
-      directLinks: [
-        {
-          title: episodeTitle,
-          link: episodeLink,
-          type: "series",
-        },
-      ],
-    });
-  });
+  title: "Episodes",
+  directLinks: [
+    {
+      title: episodeTitle,
+      link: episodeLink,
+    },
+  ],
+});
 
   /*
    * If the site uses a different episode URL format,
