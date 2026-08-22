@@ -1,9 +1,9 @@
 [
   {
-    "display_name": "EXAMPLE",
-    "value": "example",
+    "display_name": "AnimeJoker",
+    "value": "animejoker",
     "version": "1.0",
-    "icon": "",
+    "icon": "https://animejoker.com/favicon.ico",
     "type": "global",
     "hasSettings": true,
     "disabled": false
