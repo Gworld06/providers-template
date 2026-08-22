@@ -31,42 +31,38 @@ function parsePosts(
 
     const link = absoluteUrl(href, baseUrl);
 
-    // Ignore external links
-    if (!link.startsWith(baseUrl)) return;
+    // Only keep links belonging to Anime Joker.
+    if (!link.startsWith(BASE_URL)) return;
 
-    // Ignore navigation/category links
-    const path = new URL(link).pathname;
-
+    // Ignore navigation/system links.
     if (
-      path === "/" ||
-      path === "/series" ||
-      path === "/movies" ||
-      path === "/search"
+      link === BASE_URL ||
+      link === `${BASE_URL}/` ||
+      link.includes("/category/") ||
+      link.includes("/tag/") ||
+      link.includes("/page/") ||
+      link.includes("/search")
     ) {
       return;
     }
 
-    if (seen.has(link)) return;
-
     const title = clean(
-      a.find("h2, h3, h4").first().text() ||
+      a.find("h2,h3,h4").first().text() ||
       a.attr("title") ||
       a.find("img").attr("alt") ||
       a.text(),
     );
 
-    if (!title) return;
+    if (!title || title.length < 2) return;
 
-    // Ignore tiny navigation links
-    if (title.length < 2) return;
+    if (seen.has(link)) return;
+    seen.add(link);
 
     const image =
       a.find("img").attr("data-src") ||
       a.find("img").attr("data-lazy-src") ||
       a.find("img").attr("src") ||
       "";
-
-    seen.add(link);
 
     results.push({
       title,
@@ -75,7 +71,7 @@ function parsePosts(
     });
   });
 
-  return results;
+  return results.slice(0, 50);
 }
 
 export const getPosts = async function ({
@@ -91,6 +87,7 @@ export const getPosts = async function ({
   providerContext: ProviderContext;
 }): Promise<Post[]> {
   const path = filter || "/";
+
   const url = new URL(path, BASE_URL);
 
   if (page > 1) {
@@ -98,18 +95,15 @@ export const getPosts = async function ({
   }
 
   const response = await providerContext.axios.get(url.href, {
-  headers: {
-    ...providerContext.commonHeaders,
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Referer": "https://animejoker.com/",
-    "Accept":
-      "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-  },
-  signal,
-});
+    headers: providerContext.commonHeaders,
+    signal,
+  });
 
-  return parsePosts(response.data, providerContext, BASE_URL);
+  return parsePosts(
+    response.data,
+    providerContext,
+    BASE_URL,
+  );
 };
 
 export const getSearchPosts = async function ({
@@ -137,5 +131,9 @@ export const getSearchPosts = async function ({
     signal,
   });
 
-  return parsePosts(response.data, providerContext, BASE_URL);
+  return parsePosts(
+    response.data,
+    providerContext,
+    BASE_URL,
+  );
 };
