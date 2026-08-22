@@ -31,9 +31,17 @@ function parsePosts(
 
     const link = absoluteUrl(href, baseUrl);
 
+    // Ignore external links
+    if (!link.startsWith(baseUrl)) return;
+
+    // Ignore navigation/category links
+    const path = new URL(link).pathname;
+
     if (
-      !link.includes("animejoker.com/series/") &&
-      !link.includes("animejoker.com/movie/")
+      path === "/" ||
+      path === "/series" ||
+      path === "/movies" ||
+      path === "/search"
     ) {
       return;
     }
@@ -48,6 +56,9 @@ function parsePosts(
     );
 
     if (!title) return;
+
+    // Ignore tiny navigation links
+    if (title.length < 2) return;
 
     const image =
       a.find("img").attr("data-src") ||
@@ -70,7 +81,6 @@ function parsePosts(
 export const getPosts = async function ({
   filter,
   page,
-  providerValue,
   signal,
   providerContext,
 }: {
@@ -81,7 +91,6 @@ export const getPosts = async function ({
   providerContext: ProviderContext;
 }): Promise<Post[]> {
   const path = filter || "/";
-
   const url = new URL(path, BASE_URL);
 
   if (page > 1) {
@@ -99,7 +108,6 @@ export const getPosts = async function ({
 export const getSearchPosts = async function ({
   searchQuery,
   page,
-  providerValue,
   signal,
   providerContext,
 }: {
